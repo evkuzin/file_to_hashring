@@ -2,6 +2,7 @@ package hashring
 
 import (
 	"log"
+	"net/http"
 	"strconv"
 	"strings"
 )
@@ -9,6 +10,10 @@ import (
 type HashRing struct {
 	servers  []RingMember
 	hashFunc func(s string) int
+}
+
+func (h *HashRing) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
 }
 
 type RingMember interface {

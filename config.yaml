@@ -1,0 +1,7 @@
+servers:
+  - postgres5432:5432
+  - postgres5433:5432
+  - postgres5434:5432
+  - postgres5435:5432
+  - postgres5436:5432
+chunks_per_server: 1

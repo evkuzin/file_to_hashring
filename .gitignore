@@ -1,0 +1,5 @@
+bin
+.env
+.idea
+.testCoverage.txt
+vendor
