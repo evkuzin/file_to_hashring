@@ -4,4 +4,4 @@ servers:
   - postgres5434:5432
   - postgres5435:5432
   - postgres5436:5432
-chunks_per_server: 1
+#  - postgres5437:5432

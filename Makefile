@@ -87,6 +87,9 @@ upload:
 download:
 	curl "127.0.0.1:8080/download?filename=test_photo.jpeg" -o $(DOWNLOAD_DIR)/$(FILE)
 
+rebalance:
+	curl "127.0.0.1:8080/addserver?server=postgres5437:5432"
+
 check:
 	@sha256sum $(UPLOAD_DIR)/$(FILE) || echo "no sha256sum installed, check the other way"
 	@sha256sum $(DOWNLOAD_DIR)/$(FILE) || echo "no sha256sum installed, check the other way"

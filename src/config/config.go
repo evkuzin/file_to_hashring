@@ -7,8 +7,7 @@ import (
 )
 
 type Config struct {
-	ChunksPerServer int      `yaml:"chunks_per_server"`
-	Servers         []string `yaml:"servers"`
+	Servers []string `yaml:"servers"`
 }
 
 func NewConfig(f string) (*Config, error) {

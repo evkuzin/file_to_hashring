@@ -54,3 +54,12 @@ services:
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - ./misc/sql:/docker-entrypoint-initdb.d
+  postgres5437:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    ports:
+      - "5437:5432"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - ./misc/sql:/docker-entrypoint-initdb.d
