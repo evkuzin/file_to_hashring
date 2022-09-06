@@ -17,6 +17,10 @@ make check
 
 ## TODO
 
+- distributed transaction to handle file chunks in cases:
+  - during upload
+  - during rebalance
+- handle faults of any part of the solution with retries/evict bad node etc.
 - implement virtual nodes to rebalance ring in a better way. ATM keys distribution is nice, but +1 node is a mess:
 ```shell
 server 1: keys 19.230001%

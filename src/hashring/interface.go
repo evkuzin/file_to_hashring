@@ -8,3 +8,10 @@ type RingMember interface {
 	Delete(key string)
 	Name() string
 }
+
+type HashRing interface {
+	Chunks() int
+	AddServer(srv RingMember) error
+	GetServer(key string) RingMember
+	GetAllServers() []RingMember
+}

@@ -1,3 +1,4 @@
+state: postgres:5432
 servers:
   - postgres5432:5432
   - postgres5433:5432
@@ -5,3 +6,16 @@ servers:
   - postgres5435:5432
   - postgres5436:5432
 #  - postgres5437:5432
+logger:
+  level: "debug"
+  encoding: "json"
+  disableCaller: True
+  disableStacktrace: False
+  outputPaths:
+    - "stdout"
+  errorOutputPaths:
+    - "stderr"
+  encoderConfig:
+    messageKey: "message"
+    levelKey: "level"
+    levelEncoder: "lowercase"

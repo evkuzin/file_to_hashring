@@ -1,10 +1,13 @@
 package imp
 
 import (
+	"errors"
 	"file-to-hashring/src/hashring"
 	"file-to-hashring/src/logger"
 	"github.com/dgryski/go-jump"
+	_ "github.com/lib/pq"
 	"hash/fnv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -18,12 +21,16 @@ type HashRing struct {
 	chunks   int
 }
 
-func NewHashRing(servers []hashring.RingMember) *HashRing {
+func NewHashRing(servers []hashring.RingMember) hashring.HashRing {
 	hr := &HashRing{
 		servers: servers,
 		chunks:  ChunksNumber,
 	}
 	return hr
+}
+
+func (h *HashRing) GetAllServers() []hashring.RingMember {
+	return h.servers
 }
 
 func (h *HashRing) defaultHashFunc(key string) uint64 {
@@ -50,12 +57,17 @@ func (h *HashRing) hash(key string) uint64 {
 	}
 }
 
-func (h *HashRing) addServer(server hashring.RingMember) {
+func (h *HashRing) AddServer(srv hashring.RingMember) error {
 	logger.L.Infof("going to rebalance the ring...")
 	start := time.Now()
 	h.lock.RLock()
-	newRing := NewHashRing(append(h.servers, server))
-	logger.L.Infof("new server %s was added", server.Name())
+	for _, member := range h.servers {
+		if strings.EqualFold(member.Name(), srv.Name()) {
+			return errors.New("duplicate server")
+		}
+	}
+	newRing := NewHashRing(append(h.servers, srv))
+	logger.L.Infof("new server %s was added", srv.Name())
 	var keysTotal int
 	var keysMigrated int
 	tmpKeysMap := make(map[int][]string)
@@ -78,7 +90,7 @@ func (h *HashRing) addServer(server hashring.RingMember) {
 	h.lock.RUnlock()
 	h.lock.Lock()
 	h.dropOldKeys(tmpMovedKeysMap)
-	h.servers = newRing.servers
+	h.servers = newRing.GetAllServers()
 	h.lock.Unlock()
 	logger.L.Infof(
 		"Rebalancing took %s. Total keys: %d. Moved keys: %d",
@@ -86,11 +98,10 @@ func (h *HashRing) addServer(server hashring.RingMember) {
 		keysTotal,
 		keysMigrated,
 	)
+	return nil
 }
 
-func moveKey(oldRing *HashRing, newRing *HashRing, key string) {
-	oldRing.lock.RLock()
-	defer oldRing.lock.RUnlock()
+func moveKey(oldRing hashring.HashRing, newRing hashring.HashRing, key string) {
 	logger.L.Debugf(
 		"moving key %s from %s to %s",
 		key,

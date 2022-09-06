@@ -7,7 +7,6 @@ import (
 	"file-to-hashring/src/logger"
 	"fmt"
 	_ "github.com/lib/pq"
-	"log"
 	"strings"
 )
 
@@ -24,7 +23,7 @@ func NewPGServer(server string) hashring.RingMember {
 	serverParsed := strings.Split(server, ":")
 	// here supposed to be a nice validator
 	if len(serverParsed) != 2 {
-		logger.L.Fatalf("oops: something is wrong with the conenction string")
+		logger.L.Fatalf("oops: something is wrong with this connection string")
 	}
 	connStr := fmt.Sprintf(
 		"user=postgres dbname=postgres host=%s port=%s sslmode=disable",
@@ -33,7 +32,7 @@ func NewPGServer(server string) hashring.RingMember {
 	)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatal(err)
+		logger.L.Fatal(err)
 	}
 
 	return &PgServer{
