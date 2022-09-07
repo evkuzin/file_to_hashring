@@ -5,19 +5,32 @@ import (
 	"file-to-hashring/src/logger"
 	"file-to-hashring/src/server"
 	"flag"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
-func init() {
-	logger.InitLogger()
-}
-
 func main() {
-
 	cfgPath := flag.String("c", "../config.yaml", "path to a config file")
 	flag.Parse()
 	cfg, err := config.NewConfig(*cfgPath)
+	fmt.Printf("logger: %#v\n", cfg.Logger)
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
+	logger.InitLogger(cfg)
+	s := server.NewServer(cfg)
+	err = s.Init()
 	if err != nil {
 		logger.L.Fatal(err)
 	}
-	server.Start(cfg)
+	s.Start()
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	<-quit
+	logger.L.Info("graceful shutdown")
+	s.Stop()
+	os.Exit(0)
 }

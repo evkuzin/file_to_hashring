@@ -2,11 +2,14 @@ package imp
 
 import (
 	"bytes"
-	"errors"
+	"file-to-hashring/src/config"
 	"file-to-hashring/src/hashring"
 	"file-to-hashring/src/logger"
+	"file-to-hashring/src/storages/inmem"
 	"fmt"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"math/rand"
 	"testing"
 )
@@ -18,17 +21,22 @@ const (
 
 type hashRingTestSuite struct {
 	suite.Suite
-	ring     *HashRing
+	ring     hashring.HashRing
 	testFile []byte
 }
 
 func (h *hashRingTestSuite) SetupSuite() {
-	logger.InitLogger()
-	h.ring = NewHashRing(newInMemHashRing([]string{"1", "2", "3", "4", "5"}))
-	h.testFile = make([]byte, testFileChunkSize*h.ring.chunks)
+
+	zapConf := zap.NewProductionConfig()
+	zapConf.Level = zap.NewAtomicLevelAt(zapcore.ErrorLevel)
+	zapConf.Level = zap.NewAtomicLevelAt(zapcore.InfoLevel)
+	logger.InitLogger(&config.Config{Logger: &zapConf})
+
+	h.ring = NewHashRing(inmem.NewHashRingMembersList([]string{"1", "2", "3", "4", "5"}))
+	h.testFile = make([]byte, testFileChunkSize*h.ring.VNodes())
 	rand.Read(h.testFile)
 	r := bytes.NewReader(h.testFile)
-	for i := 0; i < h.ring.chunks; i++ {
+	for i := 0; i < h.ring.VNodes(); i++ {
 		key := fmt.Sprintf("%s_%d", testFileName, i)
 		raw := make([]byte, testFileChunkSize)
 		_, err := r.Read(raw)
@@ -41,8 +49,8 @@ func (h *hashRingTestSuite) SetupSuite() {
 		}
 	}
 
-	for _, srv := range h.ring.servers {
-		h.T().Logf("server %s: keys %f%%", srv.Name(), float32(len(srv.GetAllKeys()))/float32(h.ring.chunks)*100)
+	for _, srv := range h.ring.GetAllServers() {
+		h.T().Logf("server %s: keys %f%%", srv.Name(), float32(len(srv.GetAllKeys()))/float32(h.ring.VNodes())*100)
 	}
 }
 
@@ -52,7 +60,7 @@ func TestSampleSuite(t *testing.T) {
 
 func (h *hashRingTestSuite) Test_Ring() {
 	testFile := make([]byte, 0)
-	for i := 0; i < h.ring.chunks; i++ {
+	for i := 0; i < h.ring.VNodes(); i++ {
 		key := fmt.Sprintf("%s_%d", testFileName, i)
 
 		chunk, err := h.ring.GetServer(key).GetData(key)
@@ -67,84 +75,24 @@ func (h *hashRingTestSuite) Test_Ring() {
 }
 
 func (h *hashRingTestSuite) Test_RingRebalance() {
-	h.ring.addServer(NewInMem("6"))
+	err := h.ring.AddServer(inmem.NewInMem("6"))
+	if err != nil {
+		h.T().Error(err)
+	}
 	testFile := make([]byte, 0)
-	for i := 0; i < h.ring.chunks; i++ {
+	for i := 0; i < h.ring.VNodes(); i++ {
 		key := fmt.Sprintf("%s_%d", testFileName, i)
 
 		chunk, err := h.ring.GetServer(key).GetData(key)
 		if err != nil {
-			h.T().Error(err)
+			h.T().Fatal(err)
 		}
 		testFile = append(testFile, chunk...)
 	}
 	if !bytes.Equal(testFile, h.testFile) {
-		h.T().Errorf("test files are not equal :( ")
+		h.T().Fatal("test files are not equal :( ")
 	}
-	for _, srv := range h.ring.servers {
-		h.T().Logf("server %s: keys %f%%", srv.Name(), float32(len(srv.GetAllKeys()))/float32(h.ring.chunks)*100)
+	for _, srv := range h.ring.GetAllServers() {
+		h.T().Logf("server %s: keys %f%%", srv.Name(), float32(len(srv.GetAllKeys()))/float32(h.ring.VNodes())*100)
 	}
-}
-
-type inMem struct {
-	name string
-	kv   map[string][]byte
-}
-
-func NewInMem(name string) hashring.RingMember {
-	return &inMem{
-		name: name,
-		kv:   make(map[string][]byte),
-	}
-}
-
-func newInMemHashRing(servers []string) []hashring.RingMember {
-	hashRingMembers := make([]hashring.RingMember, len(servers))
-	for i, server := range servers {
-		srv := NewInMem(server)
-
-		hashRingMembers[i] = srv
-	}
-	return hashRingMembers
-}
-
-func (p *inMem) Put(key string, raw []byte) error {
-	p.kv[key] = raw
-	return nil
-}
-
-func (p *inMem) GetData(key string) ([]byte, error) {
-	data, ok := p.kv[key]
-	if ok {
-		return data, nil
-	} else {
-		return nil, errors.New("key doesnt exist")
-	}
-}
-
-func (p *inMem) GetSize(key string) (int64, error) {
-	data, ok := p.kv[key]
-	if ok {
-		return int64(len(data)), nil
-	} else {
-		return 0, errors.New("key doesnt exist")
-	}
-}
-
-func (p *inMem) GetAllKeys() []string {
-	keys := make([]string, len(p.kv))
-	var i int
-	for key := range p.kv {
-		keys[i] = key
-		i++
-	}
-	return keys
-}
-
-func (p *inMem) Delete(key string) {
-	delete(p.kv, key)
-}
-
-func (p *inMem) Name() string {
-	return p.name
 }

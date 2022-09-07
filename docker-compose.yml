@@ -9,7 +9,7 @@ services:
       - "8080:8080"
     volumes:
       - ./config.yaml:/config.yaml
-  postgres5432:
+  postgres:
     image: postgres:14-alpine
     restart: unless-stopped
     ports:
@@ -17,49 +17,46 @@ services:
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - ./misc/sql:/docker-entrypoint-initdb.d
+      - ./misc/sql/state:/docker-entrypoint-initdb.d
+  postgres5432:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - ./misc/sql/storage:/docker-entrypoint-initdb.d
   postgres5433:
     image: postgres:14-alpine
     restart: unless-stopped
-    ports:
-      - "5433:5432"
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - ./misc/sql:/docker-entrypoint-initdb.d
+      - ./misc/sql/storage:/docker-entrypoint-initdb.d
   postgres5434:
     image: postgres:14-alpine
     restart: unless-stopped
-    ports:
-      - "5434:5432"
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - ./misc/sql:/docker-entrypoint-initdb.d
+      - ./misc/sql/storage:/docker-entrypoint-initdb.d
   postgres5435:
     image: postgres:14-alpine
     restart: unless-stopped
-    ports:
-      - "5435:5432"
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - ./misc/sql:/docker-entrypoint-initdb.d
+      - ./misc/sql/storage:/docker-entrypoint-initdb.d
   postgres5436:
     image: postgres:14-alpine
     restart: unless-stopped
-    ports:
-      - "5436:5432"
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - ./misc/sql:/docker-entrypoint-initdb.d
+      - ./misc/sql/storage:/docker-entrypoint-initdb.d
   postgres5437:
     image: postgres:14-alpine
     restart: unless-stopped
-    ports:
-      - "5437:5432"
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - ./misc/sql:/docker-entrypoint-initdb.d
+      - ./misc/sql/storage:/docker-entrypoint-initdb.d
