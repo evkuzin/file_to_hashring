@@ -17,11 +17,11 @@ make check
 
 ## TODO
 
-- distributed transaction to handle file chunks in cases:
-  - during upload
-  - during rebalance
-- handle faults of any part of the solution with retries/evict bad node etc.
-- implement virtual nodes to rebalance ring in a better way. ATM keys distribution is nice, but +1 node is a mess:
+- [ ] distributed transaction to handle file chunks in cases:
+  - [ ] during upload
+  - [ ]  during rebalance
+- [ ] handle faults of any part of the solution with retries/evict bad node etc.
+- [x] implement virtual nodes to rebalance ring in a better way. ATM keys distribution is nice, but +1 node is a mess:
 ```shell
 server 1: keys 19.230001%
 server 2: keys 19.959999%
@@ -29,11 +29,13 @@ server 3: keys 20.990000%
 server 4: keys 19.559999%
 server 5: keys 20.260000%
 # adding one server
-Total keys: 10000. Moved keys: 8347
-server 1: keys 16.859999%
-server 2: keys 16.820000%
-server 3: keys 16.520000%
-server 4: keys 16.900000%
-server 5: keys 16.290001%
-server 6: keys 16.609999%
+Rebalancing took 380.401417ms. 
+Total keys before/after: 10000/10000. 
+Moved keys: 1659
+hashring_test.go:96: server 1: keys 16.370001%
+hashring_test.go:96: server 2: keys 16.590000%
+hashring_test.go:96: server 3: keys 17.120001%
+hashring_test.go:96: server 4: keys 16.300001%
+hashring_test.go:96: server 5: keys 17.030001%
+hashring_test.go:96: server 6: keys 16.590000%
 ```
