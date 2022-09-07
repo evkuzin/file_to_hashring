@@ -25,7 +25,7 @@ type Server struct {
 
 func NewServer(cfg *config.Config) *Server {
 	server := &Server{cfg: cfg}
-	hashRingMembers := postgres.NewHashRing(cfg.Servers)
+	hashRingMembers := postgres.NewHashRingMembersList(cfg.Servers)
 	server.ring = imp.NewHashRing(hashRingMembers)
 	server.http = &http.Server{Addr: ":8080", Handler: nil}
 	http.HandleFunc("/upload", server.UploadFile)
