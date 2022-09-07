@@ -17,11 +17,10 @@ func NewInMem(name string) hashring.RingMember {
 	}
 }
 
-func NewHashRing(servers []string) []hashring.RingMember {
+func NewHashRingMembersList(servers []string) []hashring.RingMember {
 	hashRingMembers := make([]hashring.RingMember, len(servers))
 	for i, server := range servers {
 		srv := NewInMem(server)
-
 		hashRingMembers[i] = srv
 	}
 	return hashRingMembers
@@ -38,15 +37,6 @@ func (p *inMem) GetData(key string) ([]byte, error) {
 		return data, nil
 	} else {
 		return nil, errors.New("key doesnt exist")
-	}
-}
-
-func (p *inMem) GetSize(key string) (int64, error) {
-	data, ok := p.kv[key]
-	if ok {
-		return int64(len(data)), nil
-	} else {
-		return 0, errors.New("key doesnt exist")
 	}
 }
 

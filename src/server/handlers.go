@@ -86,14 +86,14 @@ func (s *Server) UploadFile(w http.ResponseWriter, r *http.Request) {
 		logger.L.Warnf("error during saving file metadata: %s", err)
 		return
 	}
-	if handler.Size < int64(s.ring.Chunks()) {
+	if handler.Size < int64(s.ring.VNodes()) {
 		//TODO: make it work
 		logger.L.Warnf("number of chunks is too much for this file. can't do that")
 		w.Write([]byte(`{"err": "number of chunks is too much for this file. can't do that"}`))
 		return
 	}
-	filePartSize := handler.Size / int64(s.ring.Chunks())
-	for i := 0; i < s.ring.Chunks(); i++ {
+	filePartSize := handler.Size / int64(s.ring.VNodes())
+	for i := 0; i < s.ring.VNodes(); i++ {
 		filePart := make([]byte, filePartSize)
 		bytesRead, err := file.Read(filePart)
 		if err != nil {
@@ -108,7 +108,7 @@ func (s *Server) UploadFile(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		if i == s.ring.Chunks()-1 && err == nil {
+		if i == s.ring.VNodes()-1 && err == nil {
 			endOfTheFile, err := ioutil.ReadAll(file)
 			if err != nil {
 				w.WriteHeader(http.StatusGatewayTimeout)
@@ -149,7 +149,7 @@ func (s *Server) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileMeta.name))
 	w.Header().Set("Content-Type", fileMeta.contentType)
 	w.Header().Set("Content-Length", strconv.FormatInt(fileMeta.size, 10))
-	for i := 0; i < s.ring.Chunks(); i++ {
+	for i := 0; i < s.ring.VNodes(); i++ {
 		fileNamePart := fmt.Sprintf("%s_%d", fileName, i)
 		filePart, err := s.ring.GetServer(fileNamePart).GetData(fileNamePart)
 		if err != nil {

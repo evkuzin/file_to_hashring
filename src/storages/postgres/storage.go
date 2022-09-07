@@ -41,7 +41,7 @@ func NewPGServer(server string) hashring.RingMember {
 	}
 }
 
-func NewHashRing(servers []string) []hashring.RingMember {
+func NewHashRingMembersList(servers []string) []hashring.RingMember {
 	hashRingMembers := make([]hashring.RingMember, len(servers))
 	for i, pgServer := range servers {
 		hashRingMembers[i] = NewPGServer(pgServer)
@@ -80,19 +80,6 @@ func (p *PgServer) GetData(name string) ([]byte, error) {
 	}
 
 	return data, nil
-}
-
-func (p *PgServer) GetSize(name string) (int64, error) {
-	logger.L.Debug("GetSize called")
-	row := p.DB.QueryRow("SELECT size FROM public.files WHERE name = $1", name)
-
-	var size int64
-	err := row.Scan(&size)
-	if err != nil {
-		return 0, err
-	}
-
-	return size, nil
 }
 
 func (p *PgServer) GetAllKeys() []string {

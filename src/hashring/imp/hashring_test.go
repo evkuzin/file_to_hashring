@@ -26,14 +26,17 @@ type hashRingTestSuite struct {
 }
 
 func (h *hashRingTestSuite) SetupSuite() {
+
 	zapConf := zap.NewProductionConfig()
 	zapConf.Level = zap.NewAtomicLevelAt(zapcore.ErrorLevel)
+	zapConf.Level = zap.NewAtomicLevelAt(zapcore.InfoLevel)
 	logger.InitLogger(&config.Config{Logger: &zapConf})
-	h.ring = NewHashRing(inmem.NewHashRing([]string{"1", "2", "3", "4", "5"}))
-	h.testFile = make([]byte, testFileChunkSize*h.ring.Chunks())
+
+	h.ring = NewHashRing(inmem.NewHashRingMembersList([]string{"1", "2", "3", "4", "5"}))
+	h.testFile = make([]byte, testFileChunkSize*h.ring.VNodes())
 	rand.Read(h.testFile)
 	r := bytes.NewReader(h.testFile)
-	for i := 0; i < h.ring.Chunks(); i++ {
+	for i := 0; i < h.ring.VNodes(); i++ {
 		key := fmt.Sprintf("%s_%d", testFileName, i)
 		raw := make([]byte, testFileChunkSize)
 		_, err := r.Read(raw)
@@ -47,7 +50,7 @@ func (h *hashRingTestSuite) SetupSuite() {
 	}
 
 	for _, srv := range h.ring.GetAllServers() {
-		h.T().Logf("server %s: keys %f%%", srv.Name(), float32(len(srv.GetAllKeys()))/float32(h.ring.Chunks())*100)
+		h.T().Logf("server %s: keys %f%%", srv.Name(), float32(len(srv.GetAllKeys()))/float32(h.ring.VNodes())*100)
 	}
 }
 
@@ -57,7 +60,7 @@ func TestSampleSuite(t *testing.T) {
 
 func (h *hashRingTestSuite) Test_Ring() {
 	testFile := make([]byte, 0)
-	for i := 0; i < h.ring.Chunks(); i++ {
+	for i := 0; i < h.ring.VNodes(); i++ {
 		key := fmt.Sprintf("%s_%d", testFileName, i)
 
 		chunk, err := h.ring.GetServer(key).GetData(key)
@@ -72,21 +75,24 @@ func (h *hashRingTestSuite) Test_Ring() {
 }
 
 func (h *hashRingTestSuite) Test_RingRebalance() {
-	h.ring.AddServer(inmem.NewInMem("6"))
+	err := h.ring.AddServer(inmem.NewInMem("6"))
+	if err != nil {
+		h.T().Error(err)
+	}
 	testFile := make([]byte, 0)
-	for i := 0; i < h.ring.Chunks(); i++ {
+	for i := 0; i < h.ring.VNodes(); i++ {
 		key := fmt.Sprintf("%s_%d", testFileName, i)
 
 		chunk, err := h.ring.GetServer(key).GetData(key)
 		if err != nil {
-			h.T().Error(err)
+			h.T().Fatal(err)
 		}
 		testFile = append(testFile, chunk...)
 	}
 	if !bytes.Equal(testFile, h.testFile) {
-		h.T().Errorf("test files are not equal :( ")
+		h.T().Fatal("test files are not equal :( ")
 	}
 	for _, srv := range h.ring.GetAllServers() {
-		h.T().Logf("server %s: keys %f%%", srv.Name(), float32(len(srv.GetAllKeys()))/float32(h.ring.Chunks())*100)
+		h.T().Logf("server %s: keys %f%%", srv.Name(), float32(len(srv.GetAllKeys()))/float32(h.ring.VNodes())*100)
 	}
 }
