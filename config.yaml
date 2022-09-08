@@ -7,7 +7,7 @@ servers:
   - postgres5436:5432
 #  - postgres5437:5432
 logger:
-  level: "debug"
+  level: "info"
   encoding: "json"
   disableCaller: True
   disableStacktrace: False

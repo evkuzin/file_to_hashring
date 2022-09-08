@@ -132,6 +132,7 @@ func (s *Server) UploadFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) DownloadFile(w http.ResponseWriter, r *http.Request) {
+	//TODO: move file chunks logic to hashring? In this case interface to hashring would be put file/get file
 	err := r.ParseForm()
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)

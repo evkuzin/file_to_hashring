@@ -15,12 +15,16 @@ func main() {
 	cfgPath := flag.String("c", "../config.yaml", "path to a config file")
 	flag.Parse()
 	cfg, err := config.NewConfig(*cfgPath)
-	fmt.Printf("logger: %#v\n", cfg.Logger)
 	if err != nil {
 		fmt.Print(err)
 		os.Exit(1)
 	}
-	logger.InitLogger(cfg)
+	l, err := cfg.Logger.Build()
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
+	logger.InitLogger(l.Sugar())
 	s := server.NewServer(cfg)
 	err = s.Init()
 	if err != nil {

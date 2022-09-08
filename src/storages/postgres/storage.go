@@ -34,6 +34,8 @@ func NewPGServer(server string) hashring.RingMember {
 	if err != nil {
 		logger.L.Fatal(err)
 	}
+	db.SetMaxIdleConns(10)
+	db.SetMaxOpenConns(20)
 
 	return &PgServer{
 		DB:   db,

@@ -1,19 +1,20 @@
 package logger
 
-import (
-	"file-to-hashring/src/config"
-	"fmt"
-	"go.uber.org/zap"
-	"os"
-)
+type Logger interface {
+	Debug(args ...interface{})
+	Debugf(template string, fields ...interface{})
+	Info(args ...interface{})
+	Infof(template string, fields ...interface{})
+	Warn(args ...interface{})
+	Warnf(template string, fields ...interface{})
+	Error(args ...interface{})
+	Errorf(template string, fields ...interface{})
+	Fatal(args ...interface{})
+	Fatalf(template string, fields ...interface{})
+}
 
-var L *zap.SugaredLogger
+var L Logger
 
-func InitLogger(cfg *config.Config) {
-	logger, err := cfg.Logger.Build()
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
-	}
-	L = logger.Sugar()
+func InitLogger(logger Logger) {
+	L = logger
 }

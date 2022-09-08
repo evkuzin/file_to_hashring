@@ -17,8 +17,9 @@ import (
 )
 
 type Server struct {
-	cfg   *config.Config
-	ring  hashring.HashRing
+	cfg  *config.Config
+	ring hashring.HashRing
+	//TODO: move to hashring?
 	state *sql.DB
 	http  *http.Server
 }

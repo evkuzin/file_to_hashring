@@ -2,14 +2,11 @@ package imp
 
 import (
 	"bytes"
-	"file-to-hashring/src/config"
 	"file-to-hashring/src/hashring"
 	"file-to-hashring/src/logger"
 	"file-to-hashring/src/storages/inmem"
 	"fmt"
 	"github.com/stretchr/testify/suite"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"math/rand"
 	"testing"
 )
@@ -25,12 +22,54 @@ type hashRingTestSuite struct {
 	testFile []byte
 }
 
-func (h *hashRingTestSuite) SetupSuite() {
+type Logger struct {
+	t *testing.T
+}
 
-	zapConf := zap.NewProductionConfig()
-	zapConf.Level = zap.NewAtomicLevelAt(zapcore.ErrorLevel)
-	zapConf.Level = zap.NewAtomicLevelAt(zapcore.InfoLevel)
-	logger.InitLogger(&config.Config{Logger: &zapConf})
+func (l Logger) Error(args ...interface{}) {
+	l.t.Log(args...)
+}
+
+func (l Logger) Errorf(template string, fields ...interface{}) {
+	l.t.Logf(template, fields...)
+}
+
+func (l Logger) Fatal(args ...interface{}) {
+	l.t.Fatal(args...)
+}
+
+func (l Logger) Fatalf(template string, fields ...interface{}) {
+	l.t.Fatalf(template, fields...)
+}
+
+func (l Logger) Debug(args ...interface{}) {
+	return
+}
+
+func (l Logger) Debugf(template string, fields ...interface{}) {
+	return
+}
+
+func (l Logger) Info(args ...interface{}) {
+	l.t.Log(args...)
+}
+
+func (l Logger) Infof(template string, fields ...interface{}) {
+	l.t.Logf(template, fields...)
+}
+
+func (l Logger) Warn(args ...interface{}) {
+	l.t.Log(args...)
+}
+
+func (l Logger) Warnf(template string, fields ...interface{}) {
+	l.t.Logf(template, fields...)
+}
+
+func (h *hashRingTestSuite) SetupSuite() {
+	logger.InitLogger(Logger{
+		t: h.T(),
+	})
 
 	h.ring = NewHashRing(inmem.NewHashRingMembersList([]string{"1", "2", "3", "4", "5"}))
 	h.testFile = make([]byte, testFileChunkSize*h.ring.VNodes())
