@@ -22,7 +22,7 @@ make check
   - [ ]  during rebalance
 - [ ] handle faults of any part of the solution with retries/evict bad node etc.
 - [ ] implement weights
-- [x] implement virtual nodes to rebalance ring in a better way. ATM keys distribution is nice, but +1 node is a mess:
+- [x] implement virtual nodes to rebalance ring in a better way.
 ```shell
 server 1: keys 19.230001%
 server 2: keys 19.959999%
